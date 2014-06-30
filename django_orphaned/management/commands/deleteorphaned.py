@@ -18,8 +18,8 @@ class Command(BaseCommand):
     def handle(self, **options):
         self.only_info = options.get('info')
 
-        for app in ORPHANED_APPS_MEDIABASE_DIRS.keys():
-            if (ORPHANED_APPS_MEDIABASE_DIRS[app].has_key('root')):
+        for app in list(ORPHANED_APPS_MEDIABASE_DIRS.keys()):
+            if ('root' in ORPHANED_APPS_MEDIABASE_DIRS[app]):
                 needed_files = []
                 all_files = []
                 possible_empty_dirs = []
@@ -42,7 +42,7 @@ class Command(BaseCommand):
                     # we have found a model with FileFields
                     if len(fields) > 0:
                         files = mc.objects.all().values_list(*fields)
-                        needed_files.extend([os.path.join(settings.MEDIA_ROOT, file) for file in filter(None, chain.from_iterable(files))])
+                        needed_files.extend([os.path.join(settings.MEDIA_ROOT, file) for file in [_f for _f in chain.from_iterable(files) if _f]])
 
                 # traverse root folder and store all files and empty directories
                 def should_skip(dir):
@@ -53,7 +53,7 @@ class Command(BaseCommand):
 
                 # process each root of the app
                 app_roots = ORPHANED_APPS_MEDIABASE_DIRS[app]['root']
-                if isinstance(app_roots, basestring): # backwards compatibility
+                if isinstance(app_roots, str): # backwards compatibility
                     app_roots = [app_roots]
                 for app_root in app_roots:
                     for root, dirs, files in os.walk(app_root):
@@ -98,20 +98,20 @@ class Command(BaseCommand):
 
                 # only show
                 if (self.only_info):
-                    print "\r\n=== %s ===" % app
+                    print("\r\n=== %s ===" % app)
                     if len(empty_dirs) > 0:
-                        print "\r\nFollowing empty dirs will be removed:\r\n"
+                        print("\r\nFollowing empty dirs will be removed:\r\n")
                         for file in empty_dirs:
-                            print " ", file
+                            print(" ", file)
 
                     if len(delete_files) > 0:
-                        print "\r\nFollowing files will be deleted:\r\n"
+                        print("\r\nFollowing files will be deleted:\r\n")
                         for file in delete_files:
-                            print " ", file
-                        print "\r\nTotally %s files will be deleted, and "\
-                            "totally %s will be freed.\r\n" % (len(delete_files), total_freed)
+                            print(" ", file)
+                        print("\r\nTotally %s files will be deleted, and "\
+                            "totally %s will be freed.\r\n" % (len(delete_files), total_freed))
                     else:
-                        print "No files to delete!"
+                        print("No files to delete!")
                 # DELETE NOW!
                 else:
                     for file in delete_files:
